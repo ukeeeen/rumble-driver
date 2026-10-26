@@ -94,6 +94,10 @@ cd daemon && bash build.sh
 | `/dev/hidraw` | 绝大多数 ROM 都有 |
 | 游戏本身会调震动 API | 游戏不发震动请求就没有震动 |
 
+## 关于代码
+
+代码由 AI 辅助编写，硬件测试、协议验证和问题定位在真机上完成。
+
 ## License
 
 MIT

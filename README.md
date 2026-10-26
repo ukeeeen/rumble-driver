@@ -1,6 +1,6 @@
 # Android 手柄震动驱动 · rumble_driver
 
-给 GameSir 启明星和 Google Stadia 补上震动。这两只手柄在多数安卓机上按键、摇杆都正常，但系统不暴露震动能力（`vibrators=0`），游戏调用震动 API 没有任何反应。
+给 GameSir 启明星和 Google Stadia 补上震动。这两只手柄在多数安卓机上不暴露震动能力（`vibrators=0`），游戏调用震动 API 没有任何反应。
 
 驱动以 root 权限运行：用 uinput 造一只有震动能力的虚拟手柄转发全部输入，再把游戏发来的震动请求翻译成厂商私有报文，写到 `/dev/hidraw`。
 
@@ -8,7 +8,7 @@
 
 ## 原理
 
-按键之所以能用，是因为输入事件走的是标准 evdev 路径。震动不行，因为震动需要往手柄写厂商自定义的输出报告，而内核的通用 HID 驱动不认识这个格式，于是整个 FF（力反馈）能力就不会出现在设备上。
+按键之所以能用，是因为输入事件走的是标准 evdev 路径。而震动需要往手柄写厂商自定义的输出报告，而内核的通用 HID 驱动不认识这个格式，于是整个 FF（力反馈）能力就不会出现在设备上。
 
 驱动只用到三个内核接口：
 
@@ -56,7 +56,7 @@ GameSir（report 0x03）/ Stadia（report 0x05）→ 马达
 2. 用 Magisk / KernelSU / SukiSU 管理器刷入，重启
 3. 连接手柄
    - GameSir：开机按住 **B + Home**，指示灯变蓝（Xbox/Windows 模式），然后蓝牙配对
-   - Stadia：直接蓝牙配对
+   - Stadia：直接蓝牙配对 
 4. 游戏内选择 **GameSir Nova Lite Rumble** 或 **Stadia Controller Rumble**
 
 Android 11 以后的机型基本都带 hidraw，一般不用特意检查。想确认的话，先连上手柄，再执行 `adb shell ls /dev/hidraw`，比没连时多出一个节点就说明支持。
@@ -89,10 +89,10 @@ cd daemon && bash build.sh
 
 | 条件 | 说明 |
 |---|---|
-| Root | 必需。hidraw、uinput、input 三个节点都是 660 权限，Shizuku 的 shell 身份实测全部被拒 |
+| Root | 必需。hidraw、uinput、input 三个节点都是 660 权限 |
 | Android 12+ | 手柄震动 API 从这个版本开始有 |
-| `/dev/hidraw` | 绝大多数 ROM 都有；个别 ROM 会清零蓝牙设备的 VID/PID，这种要按设备名匹配，当前代码没做 |
-| 游戏本身会调震动 API | 驱动只修通路，不创造震动逻辑。游戏不发震动请求就没有震动 |
+| `/dev/hidraw` | 绝大多数 ROM 都有 |
+| 游戏本身会调震动 API | 游戏不发震动请求就没有震动 |
 
 ## License
 

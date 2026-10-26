@@ -676,9 +676,22 @@ static void dispatch_cmd(const char *which, int s, int w, int dur) {
     }
 }
 
+/* 直通命令文件：命中后保持 50ms 快轮询（测试 App 的时序模式依赖它），
+ * 连续空轮询退避到 250ms，避免空闲时每秒 20 次 FUSE 查找 */
+static int64_t cmd_next_check = 0;
+static int cmd_misses = 0;
+
 static void poll_cmd(void) {
+    int64_t now = now_ms();
+    if (now < cmd_next_check) return;
     FILE *f = fopen(CMD_FILE, "r");
-    if (!f) return;
+    if (!f) {
+        if (++cmd_misses > 20) cmd_next_check = now + 250;
+        else                   cmd_next_check = now + 50;
+        return;
+    }
+    cmd_misses = 0;
+    cmd_next_check = now + 50;
     char which[8] = {0};
     int s = 0, w = 0, dur = 0;
     int got = (fscanf(f, "%7s %d %d %d", which, &s, &w, &dur) == 4);
@@ -812,12 +825,20 @@ static void sock_handle(int idx) {
     sock_len[idx] = strlen(line);
     memmove(sock_buf[idx], line, sock_len[idx]);
 }
+/* 开关状态检查：标志文件在 /sdcard（FUSE 挂载），500ms 查一次足够。
+ * 人手按开关感知不到这点延迟，但空闲时的文件查找从每秒几十次降到 2 次 */
 static int driver_disabled(void) {
+    static int64_t next_check = 0;
+    static int cached = 0;
+    int64_t now = now_ms();
+    if (now < next_check) return cached;
+    next_check = now + 500;
+    cached = 0;
     for (size_t i = 0; i < sizeof(OFF_FLAGS) / sizeof(OFF_FLAGS[0]); i++) {
         int fd = open(OFF_FLAGS[i], O_RDONLY);
-        if (fd >= 0) { close(fd); return 1; }
+        if (fd >= 0) { close(fd); cached = 1; break; }
     }
-    return 0;
+    return cached;
 }
 
 static void teardown_all(void) {

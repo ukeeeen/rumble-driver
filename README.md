@@ -59,7 +59,7 @@ GameSir（report 0x03）/ Stadia（report 0x05）→ 马达
    - Stadia：直接蓝牙配对
 4. 游戏内选择 **GameSir Nova Lite Rumble** 或 **Stadia Controller Rumble**
 
-刷之前可以先确认机器有没有戏：`adb shell ls /dev/hidraw`，能列出节点就说明有。
+Android 11 以后的机型基本都带 hidraw，一般不用特意检查。想确认的话，先连上手柄，再执行 `adb shell ls /dev/hidraw`，比没连时多出一个节点就说明支持。
 
 ## 仓库结构
 

@@ -1,0 +1,20 @@
+# build outputs
+app/build/
+.gradle/
+.kotlin/
+build/
+local.properties
+*.apk
+
+# module zips（Release 附件，不入库）
+*.zip
+
+# compiled daemon
+daemon/rumble_driver
+daemon/socktest
+
+# logs
+*.log
+daemon/gamesir_rumble
+modules/*/rumble_driver
+upload_release.sh

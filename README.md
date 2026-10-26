@@ -24,7 +24,7 @@ GameSir (report 0x03) / Stadia (report 0x05) → 马达
 ## 功能
 
 - **系统级震动**：任何 App/游戏/模拟器直接可用，无需逐个适配
-- **双手柄并行**：GameSir Nova Lite（蓝牙 X 模式）+ Google Stadia（蓝牙）同时在线
+- **双手柄并行**：GameSir Nova Lite（蓝牙 Xbox/Windows 模式）+ Google Stadia（蓝牙）同时在线
 - **原手柄自动隐藏**：`unlink` 节点让系统只见虚拟手柄（= 第一个手柄），照顾「只认第一个手柄」的 App；暂停时 `mknod` 字节级还原
 - **意图时间轴**：震动结束时刻 = 锚点 + 累计请求时长。框架队列再怎么拖/批发/倾泻迟到事件，**到点就停**
 - **自适应限速**：10–40ms 自动试探蓝牙吞吐上限，EAGAIN 退让 + 5% 振幅噪声门
@@ -41,7 +41,7 @@ GameSir (report 0x03) / Stadia (report 0x05) → 马达
    - `stadia_rumble.zip` — 仅 Stadia
 2. Magisk / KernelSU / SukiSU 管理器刷入，重启
 3. 手柄连接：
-   - GameSir：**X + Home** 开机（X 模式，绿灯），蓝牙配对
+   - GameSir：开机按住 **B + Home**（Xbox/Windows 模式，蓝灯），蓝牙配对
    - Stadia：直接蓝牙配对
 4. 游戏内手柄选择 **GameSir Nova Lite Rumble** / **Stadia Controller Rumble**
 
@@ -70,18 +70,6 @@ cd daemon && bash build.sh
 # 测试 App（需 JDK 17 + Android SDK）
 ./gradlew assembleDebug
 ```
-
-## 技术要点（踩坑实录）
-
-- **协议**：GameSir X 模式 `[0x03][0x0F][00][00][强0-100][弱0-100]`（xpadneo 社区逆向 + 4 布局脉冲探测实测）；Stadia `[0x05][强u16小端][弱u16小端]`（内核 hid-google-stadiaff.c + 字节级实测）
-- **`hidraw_devinfo` 的 VID/PID 是 `__s16`**：PID ≥ 0x8000（如 Stadia 0x9400）读出为负数，比较前必须 `(uint16_t)` 转换
-- **节点去重按编号不按 fd**：同一节点重复 open 得新 fd，fd 比较判重会重复挂载
-- **防代理套代理**：虚拟手柄与真身同 VID/PID，必须按设备名含 "Rumble" 排除
-- **BLE 扛不住 200Hz**：自适应限速 + 流式合并 + 噪声门；停止包 EAGAIN 永不放弃
-- **AOSP 震动会话队列**：会批发倾泻/排队拉伸 1.5–2.9×，驱动侧意图时间轴兜底（到点即停）
-- **守护循环复活陷阱**：`pkill -x` 杀不死 while 循环的 sh，要按 cmdline 杀
-
-详细时序攻坚过程见 PPT（`ppt/deck.js` 生成）。
 
 ## 兼容性边界
 

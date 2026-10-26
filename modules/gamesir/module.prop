@@ -3,4 +3,4 @@ name=GameSir Nova Lite Rumble Driver
 version=v2.3.0
 versionCode=23
 author=ukeeeen
-description=GameSir Nova Lite（启明星）蓝牙手柄震动驱动。手柄用 X 模式（X+Home 绿灯）连接。自动隐藏原手柄，虚拟手柄即第一个手柄。点「执行」按钮或 App 内开关可切换 隐藏/显示原手柄。
+description=GameSir Nova Lite（启明星）蓝牙手柄震动驱动。手柄开机按住 B+Home（Xbox/Windows 模式，蓝灯）连接。自动隐藏原手柄，虚拟手柄即第一个手柄。点「执行」按钮或 App 内开关可切换 隐藏/显示原手柄。

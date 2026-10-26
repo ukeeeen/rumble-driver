@@ -18,3 +18,8 @@ daemon/socktest
 daemon/gamesir_rumble
 modules/*/rumble_driver
 upload_release.sh
+replace_assets.sh
+
+# PPT 生成脚本（本地保留，不入库）
+ppt/
+*.pptx

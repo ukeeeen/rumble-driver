@@ -702,7 +702,21 @@ static void poll_cmd(void) {
 
 /* ---------------- 模块简介动态状态（回写 module.prop 的 description 行） ---------------- */
 
-#define MODULE_PROP "/data/adb/modules/rumble_drivers/module.prop"
+/* 模块目录从自身可执行文件位置推导，三个包（合集/仅小鸡/仅Stadia）都能用 */
+static void module_prop_path(char *out, size_t n) {
+    char exe[256];
+    ssize_t l = readlink("/proc/self/exe", exe, sizeof(exe) - 1);
+    if (l > 0) {
+        exe[l] = 0;
+        char *slash = strrchr(exe, '/');
+        if (slash) {
+            *slash = 0;
+            snprintf(out, n, "%s/module.prop", exe);
+            if (access(out, F_OK) == 0) return;
+        }
+    }
+    snprintf(out, n, "/data/adb/modules/rumble_drivers/module.prop");
+}
 
 static void update_module_status(int paused_now) {
     static int64_t last = 0;
@@ -738,7 +752,9 @@ static void update_module_status(int paused_now) {
     }
 
     /* 原子重写 module.prop：仅替换 description 行，其余保留 */
-    FILE *f = fopen(MODULE_PROP, "r");
+    char mprop[256];
+    module_prop_path(mprop, sizeof(mprop));
+    FILE *f = fopen(mprop, "r");
     if (!f) return;
     char buf[2048], out[2048];
     size_t r = fread(buf, 1, sizeof(buf) - 1, f);
@@ -768,12 +784,12 @@ static void update_module_status(int paused_now) {
     if (!wrote)
         snprintf(out + strlen(out), sizeof(out) - strlen(out) - 1, "description=%s\n", desc);
     char tmp[128];
-    snprintf(tmp, sizeof(tmp), "%s.tmp", MODULE_PROP);
+    snprintf(tmp, sizeof(tmp), "%s.tmp", mprop);
     FILE *o = fopen(tmp, "w");
     if (!o) return;
     fputs(out, o);
     fclose(o);
-    rename(tmp, MODULE_PROP);
+    rename(tmp, mprop);
 }
 
 /* ---------------- 直通 socket 服务端（抽象域 @rumble_driver，任何App进程可连） ---------------- */

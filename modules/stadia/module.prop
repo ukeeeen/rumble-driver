@@ -1,6 +1,6 @@
 id=stadia_rumble
 name=Stadia Controller Rumble Driver
-version=v2.3.0
-versionCode=23
+version=v2.3.1
+versionCode=24
 author=ukeeeen
 description=Google Stadia 手柄蓝牙震动驱动，直接蓝牙配对即可。自动隐藏原手柄，虚拟手柄即第一个手柄。点「执行」按钮或 App 内开关可切换 隐藏/显示原手柄。

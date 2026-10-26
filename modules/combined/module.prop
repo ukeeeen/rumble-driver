@@ -1,6 +1,6 @@
 id=rumble_drivers
 name=Controller Rumble Drivers (GameSir + Stadia)
-version=v2.3.0
-versionCode=23
+version=v2.3.1
+versionCode=24
 author=ukeeeen
 description=手柄震动驱动合集：GameSir Nova Lite（B+Home 开机，Xbox/Windows 模式）+ Google Stadia（直接配对）。自动隐藏原手柄，虚拟手柄即第一个手柄。点「执行」按钮或 App 内开关可切换 隐藏/显示原手柄。

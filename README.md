@@ -71,46 +71,6 @@ cd daemon && bash build.sh
 ./gradlew assembleDebug
 ```
 
-## 适配其他手柄
-
-目前只内置两只经过真机验证的手柄。其他型号需要有人拿实物测试后添加——未经验证的协议写进去，用户看到的是「声称支持但不动」，比不支持更难排查。
-
-**先确认是否需要适配：**
-
-```bash
-adb shell getevent -pl | grep -A30 "手柄名"
-```
-
-输出里出现 `FF (0015): FF_RUMBLE` 就不用管了，内核已经支持，游戏直接可用。
-
-**需要适配时改四处**（`daemon/gamesir_rumble.c`）：
-
-1. `enum pad_type` 加一个类型
-2. `TYPE_INFO[]` 加一行：标签、虚拟设备名、VID、PID
-3. `classify()` 加 VID/PID 匹配
-4. `rumble_send()` 加该型号的报文字节格式
-
-虚拟手柄、原设备隐藏、限速、时间轴、热插拔都复用，不需要改。
-
-**协议来源**（按可靠性排序）：
-
-1. Linux 内核源码 `drivers/hid/hid-*.c` 搜该手柄 VID/PID，看 `HID_REQ_SET_REPORT` 那段
-2. 社区逆向记录（xpadneo、hid-playstation 等项目的 issue）
-3. 都没有时用 `--probe` 逐个试候选布局，按脉冲次数区分
-
-```bash
-su -c "rumble_driver --oneshot 80 80 500 --layout 1"   # 单次验证
-su -c "rumble_driver --uinput"                          # 正式代理
-```
-
-**已知限制：**
-
-- 同型号不同固件字节布局可能不同，`report_layout` 已做成运行参数
-- Switch Pro、部分 DS4 固件需要周期性重发报告，否则马达自己停
-- 只暴露 GATT 特征值、没有 HID 输出报告的 BLE 手柄，hidraw 路线无法适配
-
-提交适配请附：手柄型号与固件版本、`getevent -pl` 输出、`daemon.log` 里的配对和震动记录。
-
 ## 兼容性边界
 
 | 条件 | 说明 |

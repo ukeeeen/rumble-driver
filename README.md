@@ -72,7 +72,6 @@ modules/
   combined/  gamesir/  stadia/
                       三个模块的 module.prop / service.sh / action.sh / customize.sh
 app/                  测试 App（Kotlin/Compose），含可视化、驱动开关、时序测试、震动图库
-xposed-stubs/         LSPosed 编译桩，钩子直通方案使用
 ```
 
 ## 构建

@@ -32,7 +32,6 @@ dependencies {
     implementation(libs.androidx.compose.ui)
     implementation("androidx.compose.ui:ui-unit")
     implementation("androidx.compose.ui:ui-graphics")
-    compileOnly(project(":xposed-stubs"))
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
 }

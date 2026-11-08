@@ -16,4 +16,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "GamepadRumbleTest"
 include(":app")
-include(":xposed-stubs")

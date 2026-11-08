@@ -57,7 +57,7 @@ GameSir（report 0x03）/ Stadia（report 0x05）→ 马达
 3. 连接手柄
    - GameSir：开机按住 **B + Home**，指示灯变蓝（Xbox/Windows 模式），然后蓝牙配对
    - Stadia：直接蓝牙配对 
-4. 游戏内选择手柄，虚拟手柄的名字和真手柄一致（Xbox Wireless Controller 等）
+4. 游戏内选择手柄。虚拟手柄统一伪装成 Xbox Wireless Controller，名字白名单类的游戏也能认
 
 Android 11 以后的机型基本都带 hidraw，一般不用特意检查。想确认的话，先连上手柄，再执行 `adb shell ls /dev/hidraw`，比没连时多出一个节点就说明支持。
 

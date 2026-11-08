@@ -493,15 +493,13 @@ static int create_uinput(struct pad *p) {
 
     struct uinput_setup us;
     memset(&us, 0, sizeof(us));
-    /* 沿用真手柄的名字：部分游戏按设备名白名单匹配（星穹铁道就不认自定义名字） */
-    const char *vname = p->ev_name[0] ? p->ev_name : type_uname(p->type);
+    /* 统一伪装成 Xbox 手柄：部分游戏（星穹铁道等）按设备名白名单识别，
+     * Stadia 等名字不在名单里。Xbox 名字 + VID/PID 兼容性最广 */
+    const char *vname = "Xbox Wireless Controller";
     strncpy(us.name, vname, UINPUT_MAX_NAME_SIZE - 1);
     us.id.bustype = 0x0003;
-    for (size_t i = 0; i < sizeof(TYPE_INFO) / sizeof(TYPE_INFO[0]); i++)
-        if (TYPE_INFO[i].type == p->type) {
-            us.id.vendor = TYPE_INFO[i].vendor;
-            us.id.product = TYPE_INFO[i].product;
-        }
+    us.id.vendor = 0x045e;
+    us.id.product = 0x02fd;   /* Xbox One S */
     us.id.version = 1;
     us.ff_effects_max = MAX_EFFECTS;
     if (ioctl(u, UI_DEV_SETUP, &us) < 0 || ioctl(u, UI_DEV_CREATE, 0) < 0) {

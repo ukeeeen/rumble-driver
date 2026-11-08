@@ -41,7 +41,7 @@ GameSir（report 0x03）/ Stadia（report 0x05）→ 马达
 - 震动结束时刻按累计请求时长计算，框架队列积压时也到点就停
 - 发送间隔在 10–40ms 之间自适应，遇到 EAGAIN 退让
 - 停止包写失败不会被丢弃，挂起补发直到马达停转
-- Magisk 管理器「执行」按钮、测试 App 按钮、标志文件三种方式切换隐藏/直连
+- Magisk 管理器「执行」按钮、标志文件两种方式切换隐藏/直连
 - 模块简介实时显示当前代理了几个手柄、隐藏了哪几只、是否暂停
 - 每 3 秒扫描一次设备，断线自动重建
 
@@ -57,7 +57,7 @@ GameSir（report 0x03）/ Stadia（report 0x05）→ 马达
 3. 连接手柄
    - GameSir：开机按住 **B + Home**，指示灯变蓝（Xbox/Windows 模式），然后蓝牙配对
    - Stadia：直接蓝牙配对 
-4. 游戏内选择 **GameSir Nova Lite Rumble** 或 **Stadia Controller Rumble**
+4. 游戏内选择手柄，虚拟手柄的名字和真手柄一致（Xbox Wireless Controller 等）
 
 Android 11 以后的机型基本都带 hidraw，一般不用特意检查。想确认的话，先连上手柄，再执行 `adb shell ls /dev/hidraw`，比没连时多出一个节点就说明支持。
 
@@ -71,7 +71,6 @@ daemon/
 modules/
   combined/  gamesir/  stadia/
                       三个模块的 module.prop / service.sh / action.sh / customize.sh
-app/                  测试 App（Kotlin/Compose），含可视化、驱动开关、时序测试、震动图库
 ```
 
 ## 构建
@@ -80,8 +79,6 @@ app/                  测试 App（Kotlin/Compose），含可视化、驱动开�
 # 驱动：需要 Android NDK，r27c 验证通过
 cd daemon && bash build.sh
 
-# 测试 App：需要 JDK 17 和 Android SDK
-./gradlew assembleDebug
 ```
 
 ## 兼容性边界

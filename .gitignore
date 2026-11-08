@@ -1,5 +1,4 @@
 # build outputs
-app/build/
 .gradle/
 .kotlin/
 build/

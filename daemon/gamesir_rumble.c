@@ -69,6 +69,7 @@ struct pad {
     int ev_major, ev_minor, hidden;
     char ev_path[32];
     char ev_name[80];
+    char ui_sysname[32];               /* 自己创建的 input 节点名，用于排除自身 */
     struct ff_effect effects[MAX_EFFECTS];
     int64_t stop_at;
     int last_s, last_w;                /* 上次已发送的强度（流式去重） */
@@ -299,6 +300,21 @@ static const char *type_uname(int t) {
     return "Rumble Pad";
 }
 
+/* 判断 eventN 是否是用户态 uinput 造的虚拟设备：sysfs 位于 /devices/virtual/input/。
+ * 真蓝牙 HID 手柄的 sysfs 在 /devices/virtual/misc/uhid/ 下，据此区分，不依赖设备名。 */
+static int is_uinput_node(int ev_idx) {
+    char link[64], real[256];
+    snprintf(link, sizeof(link), "/sys/class/input/event%d/device", ev_idx);
+    ssize_t l = readlink(link, real, sizeof(real) - 1);
+    if (l <= 0) return 0;
+    real[l] = 0;
+    if (strstr(real, "/devices/virtual/input/")) return 1;
+    /* 按自己创建的 input 节点名兜底（inputNN 全系统唯一，不会误判） */
+    for (int i = 0; i < MAX_PADS; i++)
+        if (pads[i].ui_sysname[0] && strstr(real, pads[i].ui_sysname)) return 1;
+    return 0;
+}
+
 static int discover(void) {
     struct { int fd, node, bus, vendor, product; int type; } hids[MAX_PADS];
     int nh = 0;
@@ -337,10 +353,8 @@ static int discover(void) {
         if (ioctl(fd, EVIOCGID, &id) < 0) { close(fd); continue; }
         int t = classify(id.bustype, id.vendor, id.product);
         if (!t) { close(fd); continue; }
-        /* 排除自身创建的虚拟手柄（名字含 Rumble），防止代理套代理 */
-        char nm[80] = {0};
-        ioctl(fd, EVIOCGNAME(sizeof(nm) - 1), nm);
-        if (strstr(nm, "Rumble")) { close(fd); continue; }
+        /* 排除自身创建的虚拟手柄，防止代理套代理 */
+        if (is_uinput_node(e)) { close(fd); continue; }
         int dup = 0;
         for (int s = 0; s < MAX_PADS; s++) if (pads[s].ev_idx == e) dup = 1;
         if (dup) { close(fd); continue; }
@@ -479,7 +493,9 @@ static int create_uinput(struct pad *p) {
 
     struct uinput_setup us;
     memset(&us, 0, sizeof(us));
-    strncpy(us.name, type_uname(p->type), UINPUT_MAX_NAME_SIZE - 1);
+    /* 沿用真手柄的名字：部分游戏按设备名白名单匹配（星穹铁道就不认自定义名字） */
+    const char *vname = p->ev_name[0] ? p->ev_name : type_uname(p->type);
+    strncpy(us.name, vname, UINPUT_MAX_NAME_SIZE - 1);
     us.id.bustype = 0x0003;
     for (size_t i = 0; i < sizeof(TYPE_INFO) / sizeof(TYPE_INFO[0]); i++)
         if (TYPE_INFO[i].type == p->type) {
@@ -493,7 +509,13 @@ static int create_uinput(struct pad *p) {
         close(u);
         return -1;
     }
-    LOGI("uinput 代理已创建: [%s] ← %s", type_uname(p->type), p->ev_name);
+    /* 记下内核分配给自己的 input 节点名（如 input21），用于后续排除，
+     * 不依赖设备名或 sysfs 路径特征 */
+    char sysname[64] = {0};
+    if (ioctl(u, UI_GET_SYSNAME(sizeof(sysname)), sysname) == 0)
+        strncpy(p->ui_sysname, sysname, sizeof(p->ui_sysname) - 1);
+    LOGI("uinput 代理已创建: [%s] ← %s（节点 %s）", vname, p->ev_name,
+         p->ui_sysname[0] ? p->ui_sysname : "?");
     return u;
 }
 
@@ -589,7 +611,7 @@ static void try_attach_new(void) {
             }
             char nm[80] = {0};
             ioctl(ef, EVIOCGNAME(sizeof(nm) - 1), nm);
-            if (strstr(nm, "Rumble")) { close(ef); continue; }   /* 虚拟手柄不代理 */
+            if (is_uinput_node(e)) { close(ef); continue; }   /* 虚拟手柄不代理 */
             if (ioctl(ef, EVIOCGRAB, 1) < 0) {
                 /* grab 失败视为重复/被占，放弃该组合 */
                 close(ef);
